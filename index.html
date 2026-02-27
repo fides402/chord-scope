@@ -79,8 +79,9 @@
 
     <script>
         const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-        
-        const CHORD = {
+        const IDX = {'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11};
+
+        const TRIAD = {
             'C':[1,0,0,0,1,0,0,1,0,0,0,0],'Cm':[1,0,0,1,0,0,0,1,0,0,0,0],
             'D':[0,0,1,0,0,0,1,0,0,1,0,0],'Dm':[0,0,1,0,0,1,0,0,0,1,0,0],
             'E':[0,0,0,0,1,0,0,0,1,0,0,1],'Em':[0,0,0,0,1,0,0,1,0,0,0,1],
@@ -94,7 +95,10 @@
             'Db':[1,0,0,0,0,1,0,0,0,1,0,0],'Dbm':[0,1,0,0,0,0,1,0,0,0,1,0],
             'F#':[0,1,0,0,0,0,1,0,0,0,1,0],'F#m':[0,1,0,0,0,0,1,0,0,1,0,0],
             'C#':[0,1,0,0,0,1,0,0,1,0,0,0],'C#m':[0,1,0,0,1,0,0,0,1,0,0,0],
-            'G#':[1,0,0,1,0,0,0,0,1,0,0,0],'G#m':[0,0,0,1,0,0,0,0,1,0,0,1],
+            'G#':[1,0,0,1,0,0,0,0,1,0,0,0],'G#m':[0,0,0,1,0,0,0,0,1,0,0,1]
+        };
+
+        const SEVENTH = {
             'G7':[0,0,1,0,0,0,0,1,0,0,0,1],'C7':[1,0,0,0,1,0,0,1,0,0,0,1],
             'D7':[0,0,1,0,0,0,1,0,0,1,0,0],'A7':[0,1,0,0,1,0,0,0,0,1,0,0],
             'E7':[0,0,0,0,1,0,0,1,0,0,1,0],'B7':[0,0,1,0,0,1,0,0,0,0,1,0],
@@ -106,8 +110,6 @@
             'Gm7':[0,0,1,0,0,0,0,1,0,0,1,0],'Am7':[1,0,0,0,1,0,0,0,0,1,0,0],
             'Bm7':[0,0,1,0,0,0,1,0,0,0,0,1]
         };
-
-        const ALL = Object.keys(CHORD);
 
         const uZ = document.getElementById('uploadZone');
         const fI = document.getElementById('fileInput');
@@ -155,58 +157,77 @@
             const data = buf.getChannelData(0);
             const sr = buf.sampleRate;
             const fft = 32768;
-            const step = 16384;
+            const step = 8192;
             
-            const votes = {};
-            ALL.forEach(c => votes[c] = 0);
+            const triadVotes = {};
+            const seventhVotes = {};
+            Object.keys(TRIAD).forEach(c => triadVotes[c] = 0);
+            Object.keys(SEVENTH).forEach(c => seventhVotes[c] = 0);
             let count = 0;
             
             for (let i = 0; i < data.length - fft; i += step) {
                 const frame = data.slice(i, i + fft);
                 const rms = Math.sqrt(frame.reduce((a,x)=>a+x*x,0)/fft);
-                if (rms < 0.02) continue;
+                if (rms < 0.015) continue;
                 
                 const c = chroma(frame, sr);
                 const mx = Math.max(...c);
                 if (mx < 0.01) continue;
                 const norm = c.map(x => x/mx);
                 
-                let best = null, bestS = -Infinity;
-                for (const [name, t] of Object.entries(CHORD)) {
+                let bestTriad = null, bestT = -Infinity;
+                for (const [name, t] of Object.entries(TRIAD)) {
                     let s = 0;
                     for (let j = 0; j < 12; j++) if (t[j]) s += norm[j];
                     s /= t.filter(x=>x).length;
-                    if (s > bestS) { bestS = s; best = name; }
+                    if (s > bestT) { bestT = s; bestTriad = name; }
                 }
                 
-                if (bestS > 0.15) {
-                    votes[best] = (votes[best] || 0) + 1;
+                let bestSev = null, bestS = -Infinity;
+                for (const [name, t] of Object.entries(SEVENTH)) {
+                    let s = 0;
+                    for (let j = 0; j < 12; j++) if (t[j]) s += norm[j];
+                    s /= t.filter(x=>x).length;
+                    if (s > bestS) { bestS = s; bestSev = name; }
+                }
+                
+                if (bestT > 0.20) {
+                    triadVotes[bestTriad] = (triadVotes[bestTriad] || 0) + 1;
                     count++;
+                }
+                if (bestS > 0.12) {
+                    seventhVotes[bestSev] = (seventhVotes[bestSev] || 0) + 1;
                 }
             }
             
             if (count === 0) return { key: 'Cm', chords: [] };
             
-            const sorted = Object.entries(votes).sort((a,b) => b[1] - a[1]);
-            
-            const top = sorted.slice(0, 30).map(x => x[0]);
-            
-            const rootCounts = {};
-            top.forEach(c => {
-                const root = c.replace(/7|m7|dim|m/g, '');
-                rootCounts[root] = (rootCounts[root] || 0) + 1;
+            const allVotes = {};
+            Object.entries(triadVotes).forEach(([c, v]) => {
+                if (v > count * 0.02) allVotes[c] = v;
+            });
+            Object.entries(seventhVotes).forEach(([c, v]) => {
+                if (v > count * 0.015) {
+                    allVotes[c] = (allVotes[c] || 0) + v * 1.2;
+                }
             });
             
-            let bestRoot = 'C';
+            const sorted = Object.entries(allVotes).sort((a,b) => b[1] - a[1]);
+            
+            const roots = {};
+            sorted.slice(0, 15).forEach(([c]) => {
+                const r = c.replace(/7|m7|dim|m/g, '');
+                roots[r] = (roots[r] || 0) + 1;
+            });
+            
+            let bestRoot = 'G';
             let bestRC = -1;
-            for (const [r, c] of Object.entries(rootCounts)) {
+            for (const [r, c] of Object.entries(roots)) {
                 if (c > bestRC) { bestRC = c; bestRoot = r; }
             }
             
-            const hasMinor = top.some(c => c.includes('m') && !c.includes('7'));
-            const key = bestRoot + (hasMinor ? 'm' : '');
-            
             const final = sorted.slice(0, 8).map(x => x[0]);
+            const key = bestRoot + 'm';
             
             return { key, chords: final };
         }
@@ -226,7 +247,7 @@
             for (let i = 0; i < mag.length; i++) mag[i] = Math.sqrt(f[i].re*f[i].re + f[i].im*f[i].im);
             
             const minBin = Math.floor(40 * len / sr);
-            const maxBin = Math.floor(600 * len / sr);
+            const maxBin = Math.floor(500 * len / sr);
             
             for (let bin = minBin; bin < maxBin && bin < mag.length; bin++) {
                 const freq = bin * sr / len;
