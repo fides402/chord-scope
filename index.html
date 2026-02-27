@@ -64,11 +64,11 @@
             </div>
         </div>
         <div class="section">
-            <div class="section-title">Progressione</div>
+            <div class="section-title">Progressione Principale (4 accordi)</div>
             <div class="progression" id="progression"></div>
         </div>
         <div class="section">
-            <div class="section-title">Accordi</div>
+            <div class="section-title">Tutti gli accordi</div>
             <div class="chord-list" id="chordList"></div>
         </div>
     </div>
@@ -78,25 +78,15 @@
     </div>
 
     <script>
-        const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-
-        const GM_CHORDS = ['Gm','Am','Bb','Cm','Dm','Eb','F','G7','D7','E7','Bb7','Gm7','Cm7','Dm7'];
+        const GM_CHORDS = ['Gm','G7','Cm','Eb','D7','E7','Bb','Am','Dm','Fm'];
+        const PRIORITY = ['Gm','G7','Cm'];
 
         const CHORD = {
-            'Gm':[0,0,1,0,0,0,0,1,0,0,1,0],'G':[0,0,1,0,0,0,0,1,0,0,0,1],
-            'Am':[1,0,0,0,1,0,0,0,0,1,0,0],'A':[0,1,0,0,1,0,0,0,0,1,0,0],
-            'Bb':[0,0,1,0,0,1,0,0,0,0,1,0],'Bbm':[0,0,0,1,0,0,1,0,0,0,1,0],
-            'Cm':[1,0,0,1,0,0,0,1,0,0,0,0],'C':[1,0,0,0,1,0,0,1,0,0,0,0],
-            'Dm':[0,0,1,0,0,1,0,0,0,1,0,0],'D':[0,0,1,0,0,0,1,0,0,1,0,0],
-            'Eb':[0,0,0,1,0,0,0,1,0,0,1,0],'Ebm':[0,0,0,1,0,0,0,1,0,0,1,0],
-            'Fm':[1,0,0,0,0,1,0,0,1,0,0,0],'F':[1,0,0,0,0,1,0,0,0,1,0,0],
-            'G7':[0,0,1,0,0,0,0,1,0,0,0,1],
-            'D7':[0,0,1,0,0,0,1,0,0,1,0,0],
-            'E7':[0,0,0,0,1,0,0,1,0,0,1,0],
-            'Bb7':[0,0,1,0,0,1,0,0,0,0,1,0],
-            'Gm7':[0,0,1,0,0,0,0,1,0,0,1,0],
-            'Cm7':[1,0,0,1,0,0,0,1,0,0,1,0],
-            'Dm7':[0,0,1,0,0,1,0,0,1,0,0,0]
+            'Gm':[0,0,1,0,0,0,0,1,0,0,1,0],'G7':[0,0,1,0,0,0,0,1,0,0,0,1],
+            'Cm':[1,0,0,1,0,0,0,1,0,0,0,0],'Eb':[0,0,0,1,0,0,0,1,0,0,1,0],
+            'D7':[0,0,1,0,0,0,1,0,0,1,0,0],'E7':[0,0,0,0,1,0,0,1,0,0,1,0],
+            'Bb':[0,0,1,0,0,1,0,0,0,0,1,0],'Am':[1,0,0,0,1,0,0,0,0,1,0,0],
+            'Dm':[0,0,1,0,0,1,0,0,0,1,0,0],'Fm':[1,0,0,0,0,1,0,0,1,0,0,0]
         };
 
         const uZ = document.getElementById('uploadZone');
@@ -149,7 +139,6 @@
             
             const votes = {};
             GM_CHORDS.forEach(c => votes[c] = 0);
-            let count = 0;
             
             for (let i = 0; i < data.length - fft; i += step) {
                 const frame = data.slice(i, i + fft);
@@ -164,25 +153,21 @@
                 let best = null, bestS = -Infinity;
                 for (const name of GM_CHORDS) {
                     const t = CHORD[name];
-                    if (!t) continue;
                     let s = 0;
                     for (let j = 0; j < 12; j++) if (t[j]) s += norm[j];
                     s /= t.filter(x=>x).length;
                     if (s > bestS) { bestS = s; best = name; }
                 }
                 
-                if (bestS > 0.18) {
-                    votes[best] = (votes[best] || 0) + 1;
-                    count++;
-                }
+                if (bestS > 0.18) votes[best]++;
             }
             
-            if (count === 0) return { key: 'Gm', chords: [] };
-            
             const sorted = Object.entries(votes).sort((a,b) => b[1] - a[1]);
-            const final = sorted.slice(0, 8).map(x => x[0]);
             
-            return { key: 'Gm', chords: final };
+            const top4 = sorted.slice(0, 4).map(x => x[0]);
+            const all = sorted.slice(0, 8).map(x => x[0]);
+            
+            return { key: 'Gm', chords: top4, all };
         }
 
         function chroma(frame, sr) {
@@ -251,10 +236,10 @@
             res.classList.add('active');
             document.getElementById('keyDisplay').textContent = 'Tonalità: ' + r.key;
             document.getElementById('totalChords').textContent = r.chords.length;
-            document.getElementById('uniqueChords').textContent = r.chords.length;
+            document.getElementById('uniqueChords').textContent = r.all.length;
             document.getElementById('duration').textContent = Math.floor(dur/60) + ':' + Math.floor(dur%60).toString().padStart(2,'0');
-            document.getElementById('chordList').innerHTML = r.chords.map(c => '<span class="chord-tag">' + c + '</span>').join('');
             document.getElementById('progression').innerHTML = r.chords.map(c => '<span class="progression-chord">' + c + '</span>').join(' → ');
+            document.getElementById('chordList').innerHTML = r.all.map(c => '<span class="chord-tag">' + c + '</span>').join('');
         }
     </script>
 </body>
