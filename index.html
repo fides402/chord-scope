@@ -15,8 +15,8 @@
         .logo { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 2rem; color: var(--primary); text-shadow: 0 0 20px rgba(0, 255, 200, 0.4); }
         .logo span { color: var(--secondary); }
         .subtitle { color: var(--text-muted); margin-top: 8px; }
-        .upload-zone { background: var(--surface); border: 2px dashed rgba(0, 255, 200, 0.3); border-radius: 16px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.3s ease; max-width: 600px; margin: 0 auto; }
-        .upload-zone:hover { border-color: var(--primary); background: rgba(0, 255, 200, 0.05); }
+        .upload-zone { background: var(--surface); border: 2px dashed rgba(0, 255, 200, 0.3); border-radius: 16px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.3s ease; max-width: 600px; margin: 0 auto;-zone:hover { border-color: var(--primary); background: }
+        .upload rgba(0, 255, 200, 0.05); }
         .upload-zone.hidden { display: none; }
         .file-input { display: none; }
         .results { max-width: 800px; margin: 0 auto; display: none; }
@@ -79,7 +79,7 @@
         const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
         const IDX = {'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11};
 
-        const CHORD = {
+        const TRIAD = {
             'C':[1,0,0,0,1,0,0,1,0,0,0,0],'Cm':[1,0,0,1,0,0,0,1,0,0,0,0],
             'D':[0,0,1,0,0,0,1,0,0,1,0,0],'Dm':[0,0,1,0,0,1,0,0,0,1,0,0],
             'E':[0,0,0,0,1,0,0,0,1,0,0,1],'Em':[0,0,0,0,1,0,0,1,0,0,0,1],
@@ -93,16 +93,23 @@
             'Db':[1,0,0,0,0,1,0,0,0,1,0,0],'Dbm':[0,1,0,0,0,0,1,0,0,0,1,0],
             'F#':[0,1,0,0,0,0,1,0,0,0,1,0],'F#m':[0,1,0,0,0,0,1,0,0,1,0,0],
             'C#':[0,1,0,0,0,1,0,0,1,0,0,0],'C#m':[0,1,0,0,1,0,0,0,1,0,0,0],
-            'G#':[1,0,0,1,0,0,0,0,1,0,0,0],'G#m':[0,0,0,1,0,0,0,0,1,0,0,1],
+            'G#':[1,0,0,1,0,0,0,0,1,0,0,0],'G#m':[0,0,0,1,0,0,0,0,1,0,0,1]
+        };
+
+        const SEVENTH = {
             'G7':[0,0,1,0,0,0,0,1,0,0,0,1],'C7':[1,0,0,0,1,0,0,1,0,0,0,1],
             'D7':[0,0,1,0,0,0,1,0,0,1,0,0],'A7':[0,1,0,0,1,0,0,0,0,1,0,0],
             'E7':[0,0,0,0,1,0,0,1,0,0,1,0],'B7':[0,0,1,0,0,1,0,0,0,0,1,0],
             'F7':[1,0,0,0,0,1,0,0,1,0,0,0],'Bb7':[0,0,1,0,0,1,0,0,0,0,1,0],
             'Eb7':[0,0,0,1,0,0,0,1,0,0,1,0],'Ab7':[1,0,0,1,0,0,0,0,1,0,0,0],
+            'Db7':[1,0,0,0,0,1,0,0,0,1,0,0],'Gb7':[0,1,0,0,0,0,1,0,0,0,1,0],
             'Cm7':[1,0,0,1,0,0,0,1,0,0,1,0],'Dm7':[0,0,1,0,0,1,0,0,1,0,0,0],
             'Em7':[0,0,0,0,1,0,0,1,0,0,1,0],'Fm7':[1,0,0,0,0,1,0,0,1,0,0,0],
             'Gm7':[0,0,1,0,0,0,0,1,0,0,1,0],'Am7':[1,0,0,0,1,0,0,0,0,1,0,0],
-            'Bm7':[0,0,1,0,0,0,1,0,0,0,0,1]
+            'Bm7':[0,0,1,0,0,0,1,0,0,0,0,1],'Bbm7':[0,0,0,1,0,0,1,0,0,0,1,0],
+            'Ebm7':[0,0,0,1,0,0,0,1,0,0,1,0],'Abm7':[0,0,0,1,0,0,0,0,1,0,0,1],
+            'Dbm7':[0,1,0,0,0,0,1,0,0,0,1,0],'F#m7':[0,1,0,0,0,0,1,0,0,1,0,0],
+            'C#m7':[0,1,0,0,1,0,0,0,1,0,0,0],'G#m7':[0,0,0,1,0,0,0,0,1,0,0,1]
         };
 
         const uZ = document.getElementById('uploadZone');
@@ -136,74 +143,87 @@
         function analyze(buf) {
             const data = buf.getChannelData(0);
             const sr = buf.sampleRate;
-            const fft = 32768;
+            const fft = 16384;
             const step = 8192;
             
-            const votes = {};
-            Object.keys(CHORD).forEach(c => votes[c] = 0);
+            const triadVotes = {};
+            const seventhVotes = {};
+            Object.keys(TRIAD).forEach(c => triadVotes[c] = 0);
+            Object.keys(SEVENTH).forEach(c => seventhVotes[c] = 0);
             let count = 0;
             
             for (let i = 0; i < data.length - fft; i += step) {
                 const frame = data.slice(i, i + fft);
                 
                 const rms = Math.sqrt(frame.reduce((a,x)=>a+x*x,0)/fft);
-                if (rms < 0.02) continue;
+                if (rms < 0.015) continue;
                 
                 const c = chroma(frame, sr);
                 const mx = Math.max(...c);
                 if (mx < 0.01) continue;
                 const norm = c.map(x => x/mx);
                 
-                let best = null, bestS = -Infinity;
-                
-                for (const [name, t] of Object.entries(CHORD)) {
+                let bestTriad = null, bestT = -Infinity;
+                for (const [name, t] of Object.entries(TRIAD)) {
                     let s = 0;
                     for (let j = 0; j < 12; j++) if (t[j]) s += norm[j];
                     s /= t.filter(x=>x).length;
-                    
-                    if (s > bestS) { bestS = s; best = name; }
+                    if (s > bestT) { bestT = s; bestTriad = name; }
                 }
                 
-                if (bestS > 0.15) {
-                    votes[best] = (votes[best] || 0) + 1;
+                let bestSev = null, bestS = -Infinity;
+                for (const [name, t] of Object.entries(SEVENTH)) {
+                    let s = 0;
+                    for (let j = 0; j < 12; j++) if (t[j]) s += norm[j];
+                    s /= t.filter(x=>x).length;
+                    if (s > bestS) { bestS = s; bestSev = name; }
+                }
+                
+                if (bestT > 0.18) {
+                    triadVotes[bestTriad] = (triadVotes[bestTriad] || 0) + 1;
                     count++;
+                }
+                if (bestS > 0.15) {
+                    seventhVotes[bestSev] = (seventhVotes[bestSev] || 0) + 1;
                 }
             }
             
             if (count === 0) return { key: 'C', chords: [] };
             
-            const sorted = Object.entries(votes).sort((a,b) => b[1] - a[1]);
+            const allVotes = {};
+            Object.entries(triadVotes).forEach(([c, v]) => {
+                if (v > count * 0.03) allVotes[c] = v;
+            });
+            Object.entries(seventhVotes).forEach(([c, v]) => {
+                if (v > count * 0.02) {
+                    if (!allVotes[c] || v > allVotes[c] * 0.8) {
+                        allVotes[c] = v;
+                    }
+                }
+            });
             
-            const topChords = sorted.slice(0, 15).map(x => x[0]);
+            const sorted = Object.entries(allVotes).sort((a,b) => b[1] - a[1]);
             
-            let keyRoot = 'C', isMinor = true;
+            const topChords = sorted.slice(0, 12).map(x => x[0]);
             
             const rootCounts = {};
             topChords.forEach(c => {
-                const root = c.replace(/7|m7|dim|m/g, '');
+                const root = c.replace(/7|m7/g, '');
                 rootCounts[root] = (rootCounts[root] || 0) + 1;
             });
             
-            let bestRoot = 'C';
+            let bestRoot = 'G';
             let bestRC = -1;
             for (const [r, c] of Object.entries(rootCounts)) {
                 if (c > bestRC) { bestRC = c; bestRoot = r; }
             }
             
-            const hasMinor = topChords.some(c => c.includes('m'));
-            const hasMajor = topChords.some(c => !c.includes('m') && !c.includes('7'));
+            const hasMinor = topChords.some(c => c.includes('m') && !c.includes('7'));
+            const keyRoot = bestRoot + (hasMinor ? 'm' : '');
             
-            if (hasMajor && !hasMinor) isMinor = false;
-            if (hasMinor && !hasMajor) isMinor = true;
+            const final = sorted.slice(0, 8).map(x => x[0]);
             
-            keyRoot = bestRoot + (isMinor ? 'm' : '');
-            
-            const filtered = sorted
-                .filter(([chord, v]) => v > count * 0.05)
-                .slice(0, 8)
-                .map(x => x[0]);
-            
-            return { key: keyRoot, chords: filtered };
+            return { key: keyRoot, chords: final };
         }
 
         function chroma(frame, sr) {
@@ -220,8 +240,8 @@
             const mag = new Float32Array(f.length/2);
             for (let i = 0; i < mag.length; i++) mag[i] = Math.sqrt(f[i].re*f[i].re + f[i].im*f[i].im);
             
-            const minBin = Math.floor(60 * len / sr);
-            const maxBin = Math.floor(1200 * len / sr);
+            const minBin = Math.floor(55 * len / sr);
+            const maxBin = Math.floor(1000 * len / sr);
             
             for (let bin = minBin; bin < maxBin && bin < mag.length; bin++) {
                 const freq = bin * sr / len;
