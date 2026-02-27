@@ -99,14 +99,10 @@
             'E7':[0,0,0,0,1,0,0,1,0,0,1,0],'B7':[0,0,1,0,0,1,0,0,0,0,1,0],
             'F7':[1,0,0,0,0,1,0,0,1,0,0,0],'Bb7':[0,0,1,0,0,1,0,0,0,0,1,0],
             'Eb7':[0,0,0,1,0,0,0,1,0,0,1,0],'Ab7':[1,0,0,1,0,0,0,0,1,0,0,0],
-            'Db7':[1,0,0,0,0,1,0,0,0,1,0,0],'Gb7':[0,1,0,0,0,0,1,0,0,0,1,0],
             'Cm7':[1,0,0,1,0,0,0,1,0,0,1,0],'Dm7':[0,0,1,0,0,1,0,0,1,0,0,0],
             'Em7':[0,0,0,0,1,0,0,1,0,0,1,0],'Fm7':[1,0,0,0,0,1,0,0,1,0,0,0],
             'Gm7':[0,0,1,0,0,0,0,1,0,0,1,0],'Am7':[1,0,0,0,1,0,0,0,0,1,0,0],
-            'Bm7':[0,0,1,0,0,0,1,0,0,0,0,1],'Bbm7':[0,0,0,1,0,0,1,0,0,0,1,0],
-            'Ebm7':[0,0,0,1,0,0,0,1,0,0,1,0],'Abm7':[0,0,0,1,0,0,0,0,1,0,0,1],
-            'Dbm7':[0,1,0,0,0,0,1,0,0,0,1,0],'F#m7':[0,1,0,0,0,0,1,0,0,1,0,0],
-            'C#m7':[0,1,0,0,1,0,0,0,1,0,0,0],'G#m7':[0,0,0,1,0,0,0,0,1,0,0,1]
+            'Bm7':[0,0,1,0,0,0,1,0,0,0,0,1]
         };
 
         const uZ = document.getElementById('uploadZone');
@@ -140,90 +136,77 @@
         function analyze(buf) {
             const data = buf.getChannelData(0);
             const sr = buf.sampleRate;
-            const fft = 16384;
-            const step = 4096;
+            const fft = 32768;
+            const step = 8192;
             
-            const segmentDur = sr * 1.5;
-            const segments = Math.floor(data.length / segmentDur);
+            const votes = {};
+            Object.keys(CHORD).forEach(c => votes[c] = 0);
+            let count = 0;
             
-            const segmentVotes = [];
-            
-            for (let s = 0; s < segments; s++) {
-                const start = Math.floor(s * segmentDur);
-                const frame = data.slice(start, start + fft);
-                if (frame.length < fft) break;
+            for (let i = 0; i < data.length - fft; i += step) {
+                const frame = data.slice(i, i + fft);
                 
                 const rms = Math.sqrt(frame.reduce((a,x)=>a+x*x,0)/fft);
-                if (rms < 0.015) continue;
+                if (rms < 0.02) continue;
                 
-                const c = chromaEnhanced(frame, sr);
-                const votes = {};
+                const c = chroma(frame, sr);
+                const mx = Math.max(...c);
+                if (mx < 0.01) continue;
+                const norm = c.map(x => x/mx);
+                
+                let best = null, bestS = -Infinity;
                 
                 for (const [name, t] of Object.entries(CHORD)) {
-                    let score = 0;
-                    let bassScore = 0;
+                    let s = 0;
+                    for (let j = 0; j < 12; j++) if (t[j]) s += norm[j];
+                    s /= t.filter(x=>x).length;
                     
-                    for (let i = 0; i < 12; i++) {
-                        if (t[i]) {
-                            score += c[i];
-                            if (i < 4) bassScore += c[i] * 1.5;
-                        }
-                    }
-                    score /= t.filter(x=>x).length;
-                    score += bassScore / t.filter(x=>x).length * 0.3;
-                    
-                    votes[name] = score;
+                    if (s > bestS) { bestS = s; best = name; }
                 }
                 
-                const sorted = Object.entries(votes).sort((a,b) => b[1] - a[1]);
-                const best = sorted[0];
-                if (best && best[1] > 0.12) {
-                    segmentVotes.push(best[0]);
+                if (bestS > 0.15) {
+                    votes[best] = (votes[best] || 0) + 1;
+                    count++;
                 }
             }
             
-            const chordCounts = {};
-            segmentVotes.forEach(c => { chordCounts[c] = (chordCounts[c] || 0) + 1; });
+            if (count === 0) return { key: 'C', chords: [] };
             
-            const sorted = Object.entries(chordCounts).sort((a,b) => b[1] - a[1]);
+            const sorted = Object.entries(votes).sort((a,b) => b[1] - a[1]);
             
-            const topChords = sorted.slice(0, 30).map(x => x[0]);
+            const topChords = sorted.slice(0, 15).map(x => x[0]);
             
-            const key = inferKeyFromChords(topChords);
-            const finalChords = sorted.slice(0, 8).map(x => x[0]);
+            let keyRoot = 'C', isMinor = true;
             
-            return { key, chords: finalChords };
-        }
-
-        function inferKeyFromChords(chords) {
-            const rootVotes = {};
-            
-            chords.forEach(c => {
+            const rootCounts = {};
+            topChords.forEach(c => {
                 const root = c.replace(/7|m7|dim|m/g, '');
-                rootVotes[root] = (rootVotes[root] || 0) + 1;
-                
-                if (c.includes('7')) {
-                    const rootNote = c.replace('7','');
-                    const keyFromDom = NOTES[(IDX[rootNote] + 7) % 12];
-                    rootVotes[keyFromDom] = (rootVotes[keyFromDom] || 0) + 1.5;
-                }
-                
-                if (c.includes('m7') || c.endsWith('m')) {
-                    rootVotes[root] = (rootVotes[root] || 0) + 0.5;
-                }
+                rootCounts[root] = (rootCounts[root] || 0) + 1;
             });
             
             let bestRoot = 'C';
-            let bestScore = -Infinity;
-            
-            for (const [r, s] of Object.entries(rootVotes)) {
-                if (s > bestScore) { bestScore = s; bestRoot = r; }
+            let bestRC = -1;
+            for (const [r, c] of Object.entries(rootCounts)) {
+                if (c > bestRC) { bestRC = c; bestRoot = r; }
             }
             
-            return bestRoot + 'm';
+            const hasMinor = topChords.some(c => c.includes('m'));
+            const hasMajor = topChords.some(c => !c.includes('m') && !c.includes('7'));
+            
+            if (hasMajor && !hasMinor) isMinor = false;
+            if (hasMinor && !hasMajor) isMinor = true;
+            
+            keyRoot = bestRoot + (isMinor ? 'm' : '');
+            
+            const filtered = sorted
+                .filter(([chord, v]) => v > count * 0.05)
+                .slice(0, 8)
+                .map(x => x[0]);
+            
+            return { key: keyRoot, chords: filtered };
         }
 
-        function chromaEnhanced(frame, sr) {
+        function chroma(frame, sr) {
             const len = frame.length;
             const c = new Array(12).fill(0);
             
@@ -237,34 +220,14 @@
             const mag = new Float32Array(f.length/2);
             for (let i = 0; i < mag.length; i++) mag[i] = Math.sqrt(f[i].re*f[i].re + f[i].im*f[i].im);
             
-            const minBin = Math.floor(40 * len / sr);
-            const maxBin = Math.floor(800 * len / sr);
+            const minBin = Math.floor(60 * len / sr);
+            const maxBin = Math.floor(1200 * len / sr);
             
             for (let bin = minBin; bin < maxBin && bin < mag.length; bin++) {
                 const freq = bin * sr / len;
-                if (freq < 30) continue;
-                
-                let freqVal = freq;
-                while (freqVal > 440) freqVal /= 2;
-                
-                const note = 12 * Math.log2(freqVal / 440) + 69;
+                const note = 12 * Math.log2(freq / 440) + 69;
                 const pc = ((Math.round(note) % 12) + 12) % 12;
-                
-                const weight = 1 + 1/(1 + Math.abs(Math.round(note) - note));
-                c[pc] += mag[bin] * weight;
-            }
-            
-            const subBass = new Float32Array(f.length/2);
-            for (let i = 0; i < subBass.length; i++) subBass[i] = mag[i];
-            
-            for (let h = 2; h <= 5; h++) {
-                for (let i = 0; i < mag.length / h; i++) {
-                    subBass[i] *= Math.pow(mag[i * h], 0.3);
-                }
-            }
-            
-            for (let i = 0; i < 12; i++) {
-                c[i] += subBass[i] * 0.1;
+                c[pc] += mag[bin];
             }
             
             const mx = Math.max(...c);
