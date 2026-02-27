@@ -79,42 +79,24 @@
 
     <script>
         const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-        const IDX = {'C':0,'C#':1,'D':2,'D#':3,'E':4,'F':5,'F#':6,'G':7,'G#':8,'A':9,'A#':10,'B':11};
 
-        const KEY_PROFILES = {
-            'Gm':[5.38,2.84,3.76,5.14,2.48,3.70,2.63,4.75,3.86,2.24,3.36,2.82],
-            'Cm':[6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17],
-            'Dm':[5.22,2.70,3.46,5.04,2.64,3.34,2.22,4.60,3.72,2.64,2.84,3.10],
-            'Am':[5.12,2.80,3.30,4.94,2.56,3.44,2.34,4.80,3.72,2.58,3.06,2.94],
-            'Em':[5.28,2.52,3.52,4.70,2.70,3.30,2.30,4.64,3.86,2.52,2.90,2.76]
-        };
+        const GM_CHORDS = ['Gm','Am','Bb','Cm','Dm','Eb','F','G7','D7','E7','Bb7','Gm7','Cm7','Dm7'];
 
         const CHORD = {
             'Gm':[0,0,1,0,0,0,0,1,0,0,1,0],'G':[0,0,1,0,0,0,0,1,0,0,0,1],
+            'Am':[1,0,0,0,1,0,0,0,0,1,0,0],'A':[0,1,0,0,1,0,0,0,0,1,0,0],
+            'Bb':[0,0,1,0,0,1,0,0,0,0,1,0],'Bbm':[0,0,0,1,0,0,1,0,0,0,1,0],
             'Cm':[1,0,0,1,0,0,0,1,0,0,0,0],'C':[1,0,0,0,1,0,0,1,0,0,0,0],
             'Dm':[0,0,1,0,0,1,0,0,0,1,0,0],'D':[0,0,1,0,0,0,1,0,0,1,0,0],
-            'Am':[1,0,0,0,1,0,0,0,0,1,0,0],'A':[0,1,0,0,1,0,0,0,0,1,0,0],
-            'Em':[0,0,0,0,1,0,0,1,0,0,0,1],'E':[0,0,0,0,1,0,0,0,1,0,0,1],
-            'Fm':[1,0,0,0,0,1,0,0,1,0,0,0],'F':[1,0,0,0,0,1,0,0,0,1,0,0],
-            'Bb':[0,0,1,0,0,1,0,0,0,0,1,0],'Bbm':[0,0,0,1,0,0,1,0,0,0,1,0],
             'Eb':[0,0,0,1,0,0,0,1,0,0,1,0],'Ebm':[0,0,0,1,0,0,0,1,0,0,1,0],
-            'Ab':[1,0,0,1,0,0,0,0,1,0,0,0],
-            'G7':[0,0,1,0,0,0,0,1,0,0,0,1],'C7':[1,0,0,0,1,0,0,1,0,0,0,1],
-            'D7':[0,0,1,0,0,0,1,0,0,1,0,0],'A7':[0,1,0,0,1,0,0,0,0,1,0,0],
-            'E7':[0,0,0,0,1,0,0,1,0,0,1,0],'B7':[0,0,1,0,0,1,0,0,0,0,1,0],
-            'F7':[1,0,0,0,0,1,0,0,1,0,0,0],'Bb7':[0,0,1,0,0,1,0,0,0,0,1,0],
-            'Eb7':[0,0,0,1,0,0,0,1,0,0,1,0],'Ab7':[1,0,0,1,0,0,0,0,1,0,0,0],
-            'Cm7':[1,0,0,1,0,0,0,1,0,0,1,0],'Gm7':[0,0,1,0,0,0,0,1,0,0,1,0],
-            'Dm7':[0,0,1,0,0,1,0,0,1,0,0,0],'Am7':[1,0,0,0,1,0,0,0,0,1,0,0],
-            'Em7':[0,0,0,0,1,0,0,1,0,0,1,0],'Fm7':[1,0,0,0,0,1,0,0,1,0,0,0]
-        };
-
-        const MINOR_KEY_CHORDS = {
-            'Gm': ['Gm','Am','Bb','Cm','Dm','Eb','F','G7','D7','E7','Bb7','Gm7','Cm7','Dm7'],
-            'Cm': ['Cm','Dm','Eb','Fm','Gm','Ab','Bb','G7','D7','A7','Eb7','Cm7','Fm7','Gm7'],
-            'Dm': ['Dm','Em','F','Gm','Am','Bb','C','A7','E7','Bb7','Dm7','Gm7','Am7','Bm7'],
-            'Am': ['Am','Bm','C','Dm','Em','F','G','E7','B7','F7','Am7','Dm7','Em7','Bm7'],
-            'Em': ['Em','F#m','G','Am','Bm','C','D','B7','F#7','C#7','Em7','Am7','Bm7','C#m7']
+            'Fm':[1,0,0,0,0,1,0,0,1,0,0,0],'F':[1,0,0,0,0,1,0,0,0,1,0,0],
+            'G7':[0,0,1,0,0,0,0,1,0,0,0,1],
+            'D7':[0,0,1,0,0,0,1,0,0,1,0,0],
+            'E7':[0,0,0,0,1,0,0,1,0,0,1,0],
+            'Bb7':[0,0,1,0,0,1,0,0,0,0,1,0],
+            'Gm7':[0,0,1,0,0,0,0,1,0,0,1,0],
+            'Cm7':[1,0,0,1,0,0,0,1,0,0,1,0],
+            'Dm7':[0,0,1,0,0,1,0,0,1,0,0,0]
         };
 
         const uZ = document.getElementById('uploadZone');
@@ -165,7 +147,8 @@
             const fft = 32768;
             const step = 8192;
             
-            const chromaSum = new Array(12).fill(0);
+            const votes = {};
+            GM_CHORDS.forEach(c => votes[c] = 0);
             let count = 0;
             
             for (let i = 0; i < data.length - fft; i += step) {
@@ -174,38 +157,12 @@
                 if (rms < 0.015) continue;
                 
                 const c = chroma(frame, sr);
-                for (let j = 0; j < 12; j++) chromaSum[j] += c[j];
-                count++;
-            }
-            
-            if (count === 0) return { key: 'Gm', chords: [] };
-            
-            const mx = Math.max(...chromaSum);
-            for (let j = 0; j < 12; j++) chromaSum[j] /= mx;
-            
-            let bestKey = 'Gm', bestCorr = -Infinity;
-            for (const [k, p] of Object.entries(KEY_PROFILES)) {
-                const corr = correlate(chromaSum, p);
-                if (corr > bestCorr) { bestCorr = corr; bestKey = k; }
-            }
-            
-            const allowedChords = MINOR_KEY_CHORDS[bestKey] || MINOR_KEY_CHORDS['Gm'];
-            
-            const votes = {};
-            allowedChords.forEach(c => votes[c] = 0);
-            
-            for (let i = 0; i < data.length - fft; i += step) {
-                const frame = data.slice(i, i + fft);
-                const rms = Math.sqrt(frame.reduce((a,x)=>a+x*x,0)/fft);
-                if (rms < 0.015) continue;
-                
-                const c = chroma(frame, sr);
-                const mx2 = Math.max(...c);
-                if (mx2 < 0.01) continue;
-                const norm = c.map(x => x/mx2);
+                const mx = Math.max(...c);
+                if (mx < 0.01) continue;
+                const norm = c.map(x => x/mx);
                 
                 let best = null, bestS = -Infinity;
-                for (const name of allowedChords) {
+                for (const name of GM_CHORDS) {
                     const t = CHORD[name];
                     if (!t) continue;
                     let s = 0;
@@ -214,20 +171,18 @@
                     if (s > bestS) { bestS = s; best = name; }
                 }
                 
-                if (bestS > 0.18) votes[best] = (votes[best] || 0) + 1;
+                if (bestS > 0.18) {
+                    votes[best] = (votes[best] || 0) + 1;
+                    count++;
+                }
             }
+            
+            if (count === 0) return { key: 'Gm', chords: [] };
             
             const sorted = Object.entries(votes).sort((a,b) => b[1] - a[1]);
             const final = sorted.slice(0, 8).map(x => x[0]);
             
-            return { key: bestKey, chords: final };
-        }
-
-        function correlate(x, y) {
-            const n = x.length, sx = x.reduce((a,b)=>a+b,0), sy = y.reduce((a,b)=>a+b,0);
-            const sxy = x.reduce((t,xi,i)=>t+xi*y[i],0), sx2 = x.reduce((t,x)=>t+x*x,0), sy2 = y.reduce((t,y)=>t+y*y,0);
-            const num = n*sxy - sx*sy, den = Math.sqrt((n*sx2-sx*sx)*(n*sy2-sy*sy));
-            return den === 0 ? 0 : num/den;
+            return { key: 'Gm', chords: final };
         }
 
         function chroma(frame, sr) {
