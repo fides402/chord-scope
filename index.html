@@ -250,69 +250,80 @@
 
     <script>
         const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        const MAJOR_CHORDS = {
+            'C': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'C#': [0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'D': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'Eb': [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+            'E': [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+            'F': [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+            'F#': [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+            'G': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            'Ab': [1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+            'A': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'Bb': [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+            'B': [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1]
+        };
 
-        const CHORD_TEMPLATES = {
-            'C': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0], 'C#': [0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'D': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0], 'D#': [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
-            'E': [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1], 'F': [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-            'F#': [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0], 'G': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-            'G#': [1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0], 'A': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
-            'A#': [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0], 'B': [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
-            'Cm': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0], 'C#m': [0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-            'Dm': [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0], 'D#m': [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0],
-            'Em': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1], 'Fm': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'F#m': [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0], 'Gm': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-            'G#m': [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1], 'Am': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
-            'A#m': [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0], 'Bm': [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-            'C7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1], 'D7': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
-            'E7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 'F7': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'G7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1], 'A7': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+        const MINOR_CHORDS = {
+            'Cm': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+            'C#m': [0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            'Dm': [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+            'D#m': [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0],
+            'Em': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+            'Fm': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'F#m': [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'Gm': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            'G#m': [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+            'Am': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'A#m': [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+            'Bm': [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        };
+
+        const SEVENTH_CHORDS = {
+            'G7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            'Cm7': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+            'C7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+            'D7': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'E7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            'A7': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
             'B7': [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-            'Cmaj7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 'Dmaj7': [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'Emaj7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1], 'Fmaj7': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'Gmaj7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0], 'Amaj7': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
-            'Cmin7': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], 'Dmin7': [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'Emin7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 'Fmin7': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'Gmin7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0], 'Amin7': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
-            'Cdim': [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0], 'Ddim': [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-            'Edim': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 'Fdim': [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-            'Gdim': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1], 'Adim': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-            'Caug': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], 'Daug': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
-            'Eaug': [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0], 'Faug': [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-            'Csus2': [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 'Dsus2': [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-            'Esus2': [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0], 'Fsus2': [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-            'Gsus2': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1], 'Asus2': [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-            'Csus4': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], 'Dsus4': [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
-            'Esus4': [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0], 'Fsus4': [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
-            'Gsus4': [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 'Asus4': [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+            'D#7': [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+            'A#7': [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0]
         };
 
-        const KEY_PROFILES = {
-            'C:major': [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88],
-            'C:minor': [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17],
-            'G:major': [5.04, 2.24, 3.86, 2.06, 4.78, 4.03, 2.28, 5.52, 1.95, 2.84, 2.13, 2.78],
-            'G:minor': [5.38, 2.84, 3.76, 5.14, 2.48, 3.70, 2.63, 4.75, 3.86, 2.24, 3.36, 2.82],
-            'D:major': [4.09, 2.60, 3.04, 2.54, 4.70, 3.82, 2.41, 4.83, 2.66, 2.74, 1.92, 3.33],
-            'D:minor': [5.22, 2.70, 3.46, 5.04, 2.64, 3.34, 2.22, 4.60, 3.72, 2.64, 2.84, 3.10],
-            'A:major': [4.86, 2.17, 2.90, 2.65, 4.10, 3.97, 2.12, 4.51, 2.34, 2.88, 1.95, 2.97],
-            'A:minor': [5.12, 2.80, 3.30, 4.94, 2.56, 3.44, 2.34, 4.80, 3.72, 2.58, 3.06, 2.94],
-            'E:major': [4.26, 2.24, 2.83, 2.40, 4.16, 4.21, 2.12, 4.51, 2.22, 3.18, 2.08, 3.22],
-            'E:minor': [5.28, 2.52, 3.52, 4.70, 2.70, 3.30, 2.30, 4.64, 3.86, 2.52, 2.90, 2.76],
-            'F:major': [5.70, 2.28, 3.28, 2.18, 4.36, 3.94, 2.46, 4.94, 2.44, 3.24, 1.90, 2.74],
-            'F:minor': [5.86, 2.76, 3.40, 5.16, 2.52, 3.48, 2.64, 4.82, 3.80, 2.54, 3.26, 2.90],
-            'B:major': [3.94, 2.66, 2.80, 2.56, 4.04, 3.84, 2.34, 4.44, 2.26, 3.16, 1.88, 3.30],
-            'B:minor': [5.22, 2.58, 3.62, 4.78, 2.60, 3.36, 2.34, 4.68, 3.78, 2.46, 3.04, 2.72],
-            'Bb:major': [4.96, 2.24, 2.96, 2.36, 4.30, 3.90, 2.20, 4.74, 2.28, 2.98, 2.00, 2.88],
-            'Bb:minor': [5.44, 2.64, 3.44, 5.02, 2.58, 3.42, 2.56, 4.76, 3.78, 2.50, 3.18, 2.86],
-            'Eb:major': [4.50, 2.56, 2.86, 2.44, 4.22, 3.92, 2.24, 4.56, 2.24, 3.12, 1.98, 3.18],
-            'Eb:minor': [5.30, 2.68, 3.44, 4.90, 2.56, 3.38, 2.42, 4.72, 3.80, 2.52, 3.04, 2.90],
-            'Ab:major': [4.18, 2.44, 2.90, 2.54, 4.06, 3.86, 2.30, 4.52, 2.30, 3.06, 2.04, 3.14],
-            'Ab:minor': [5.26, 2.72, 3.48, 4.82, 2.54, 3.40, 2.48, 4.68, 3.82, 2.54, 3.00, 2.82],
-            'Db:major': [4.06, 2.52, 2.82, 2.50, 4.12, 3.88, 2.26, 4.48, 2.28, 3.04, 2.02, 3.12],
-            'Db:minor': [5.20, 2.70, 3.42, 4.76, 2.52, 3.38, 2.44, 4.66, 3.78, 2.52, 2.98, 2.84],
-            'Gb:major': [4.02, 2.60, 2.84, 2.58, 4.04, 3.82, 2.34, 4.46, 2.34, 2.98, 2.08, 3.08],
-            'Gb:minor': [5.16, 2.74, 3.38, 4.70, 2.48, 3.36, 2.50, 4.60, 3.74, 2.48, 2.94, 2.80]
+        const KEY_PROFILES_MAJOR = {
+            'C': [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88],
+            'G': [5.04, 2.24, 3.86, 2.06, 4.78, 4.03, 2.28, 5.52, 1.95, 2.84, 2.13, 2.78],
+            'D': [4.09, 2.60, 3.04, 2.54, 4.70, 3.82, 2.41, 4.83, 2.66, 2.74, 1.92, 3.33],
+            'A': [4.86, 2.17, 2.90, 2.65, 4.10, 3.97, 2.12, 4.51, 2.34, 2.88, 1.95, 2.97],
+            'E': [4.26, 2.24, 2.83, 2.40, 4.16, 4.21, 2.12, 4.51, 2.22, 3.18, 2.08, 3.22],
+            'B': [3.94, 2.66, 2.80, 2.56, 4.04, 3.84, 2.34, 4.44, 2.26, 3.16, 1.88, 3.30],
+            'F': [5.70, 2.28, 3.28, 2.18, 4.36, 3.94, 2.46, 4.94, 2.44, 3.24, 1.90, 2.74],
+            'Bb': [4.96, 2.24, 2.96, 2.36, 4.30, 3.90, 2.20, 4.74, 2.28, 2.98, 2.00, 2.88],
+            'Eb': [4.50, 2.56, 2.86, 2.44, 4.22, 3.92, 2.24, 4.56, 2.24, 3.12, 1.98, 3.18],
+            'Ab': [4.18, 2.44, 2.90, 2.54, 4.06, 3.86, 2.30, 4.52, 2.30, 3.06, 2.04, 3.14],
+            'Db': [4.06, 2.52, 2.82, 2.50, 4.12, 3.88, 2.26, 4.48, 2.28, 3.04, 2.02, 3.12],
+            'Gb': [4.02, 2.60, 2.84, 2.58, 4.04, 3.82, 2.34, 4.46, 2.34, 2.98, 2.08, 3.08]
         };
+
+        const KEY_PROFILES_MINOR = {
+            'Gm': [5.38, 2.84, 3.76, 5.14, 2.48, 3.70, 2.63, 4.75, 3.86, 2.24, 3.36, 2.82],
+            'Dm': [5.22, 2.70, 3.46, 5.04, 2.64, 3.34, 2.22, 4.60, 3.72, 2.64, 2.84, 3.10],
+            'Am': [5.12, 2.80, 3.30, 4.94, 2.56, 3.44, 2.34, 4.80, 3.72, 2.58, 3.06, 2.94],
+            'Em': [5.28, 2.52, 3.52, 4.70, 2.70, 3.30, 2.30, 4.64, 3.86, 2.52, 2.90, 2.76],
+            'Bm': [5.22, 2.58, 3.62, 4.78, 2.60, 3.36, 2.34, 4.68, 3.78, 2.46, 3.04, 2.72],
+            'F#m': [5.28, 2.60, 3.56, 4.72, 2.58, 3.38, 2.38, 4.64, 3.76, 2.48, 3.02, 2.78],
+            'Cm': [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17],
+            'Fm': [5.86, 2.76, 3.40, 5.16, 2.52, 3.48, 2.64, 4.82, 3.80, 2.54, 3.26, 2.90],
+            'C#m': [5.34, 2.64, 3.50, 5.00, 2.60, 3.40, 2.40, 4.70, 3.80, 2.50, 3.10, 2.84],
+            'G#m': [5.26, 2.72, 3.48, 4.82, 2.54, 3.40, 2.48, 4.68, 3.82, 2.54, 3.00, 2.82],
+            'D#m': [5.30, 2.68, 3.44, 4.90, 2.56, 3.38, 2.42, 4.72, 3.80, 2.52, 3.04, 2.90],
+            'A#m': [5.44, 2.64, 3.44, 5.02, 2.58, 3.42, 2.56, 4.76, 3.78, 2.50, 3.18, 2.86]
+        };
+
+        const ALL_CHORDS = { ...MAJOR_CHORDS, ...MINOR_CHORDS, ...SEVENTH_CHORDS };
 
         const uploadZone = document.getElementById('uploadZone');
         const fileInput = document.getElementById('fileInput');
@@ -342,7 +353,7 @@
                 const key = detectKey(audioBuffer);
 
                 showLoading('Analisi accordi...');
-                const chords = detectChords(audioBuffer);
+                const chords = detectChords(audioBuffer, key);
 
                 displayResults(chords, key, audioBuffer.duration);
                 hideLoading();
@@ -352,29 +363,41 @@
         function detectKey(buffer) {
             const sampleRate = buffer.sampleRate;
             const channelData = buffer.getChannelData(0);
-            const fftSize = 4096;
-            const hopSize = 2048;
+            const fftSize = 16384;
+            const hopSize = 8192;
             const chroma = new Array(12).fill(0);
+            let numFrames = 0;
 
-            for (let frame = 0; frame < Math.floor((channelData.length - fftSize) / hopSize); frame += 10) {
-                const frameData = channelData.slice(frame * hopSize, frame * hopSize + fftSize);
-                const frameChroma = computeChromagram(frameData, sampleRate);
+            for (let frame = 0; frame < Math.floor((channelData.length - fftSize) / hopSize); frame++) {
+                const startSample = frame * hopSize;
+                const frameData = channelData.slice(startSample, startSample + fftSize);
+                
+                const rms = Math.sqrt(frameData.reduce((sum, x) => sum + x * x, 0) / fftSize);
+                if (rms < 0.01) continue;
+                
+                const frameChroma = computeEnhancedChromagram(frameData, sampleRate);
                 for (let i = 0; i < 12; i++) chroma[i] += frameChroma[i];
+                numFrames++;
             }
+
+            if (numFrames === 0) return 'C';
 
             const maxVal = Math.max(...chroma);
             if (maxVal > 0) for (let i = 0; i < 12; i++) chroma[i] /= maxVal;
 
-            let bestKey = 'C:major';
+            let bestKey = 'Gm';
             let bestCorrelation = -Infinity;
 
-            for (const [key, profile] of Object.entries(KEY_PROFILES)) {
+            const allKeys = {};
+            for (const [key, profile] of Object.entries(KEY_PROFILES_MAJOR)) allKeys[key] = { profile, mode: 'major' };
+            for (const [key, profile] of Object.entries(KEY_PROFILES_MINOR)) allKeys[key] = { profile, mode: 'minor' };
+
+            for (const [key, { profile, mode }] of Object.entries(allKeys)) {
                 const correlation = pearsonCorrelation(chroma, profile);
                 if (correlation > bestCorrelation) { bestCorrelation = correlation; bestKey = key; }
             }
 
-            const [root, mode] = bestKey.split(':');
-            return mode === 'major' ? root : `${root}m`;
+            return bestKey;
         }
 
         function pearsonCorrelation(x, y) {
@@ -389,65 +412,118 @@
             return denominator === 0 ? 0 : numerator / denominator;
         }
 
-        function detectChords(buffer) {
+        function detectChords(buffer, key) {
             const sampleRate = buffer.sampleRate;
             const channelData = buffer.getChannelData(0);
-            const fftSize = 4096;
-            const hopSize = 2048;
+            const fftSize = 16384;
+            const hopSize = 4096;
             const chords = [];
-            const minDuration = 0.5;
+            const minDuration = 0.8;
 
             for (let frame = 0; frame < Math.floor((channelData.length - fftSize) / hopSize); frame++) {
-                const frameData = channelData.slice(frame * hopSize, frame * hopSize + fftSize);
-                const chromagram = computeChromagram(frameData, sampleRate);
-                const { chord } = matchChordTemplate(chromagram);
-                const time = (frame * hopSize) / sampleRate;
-                chords.push({ name: chord, startTime: time });
+                const startSample = frame * hopSize;
+                const frameData = channelData.slice(startSample, startSample + fftSize);
+                
+                const rms = Math.sqrt(frameData.reduce((sum, x) => sum + x * x, 0) / fftSize);
+                if (rms < 0.02) {
+                    chords.push({ name: 'N.C.', startTime: startSample / sampleRate });
+                    continue;
+                }
+
+                const chromagram = computeEnhancedChromagram(frameData, sampleRate);
+                const { chord } = matchChordTemplate(chromagram, key);
+                chords.push({ name: chord, startTime: startSample / sampleRate });
             }
 
             const merged = [];
-            let current = chords[0];
+            let current = { ...chords[0], endTime: chords[0].startTime };
             
             for (let i = 1; i < chords.length; i++) {
                 if (chords[i].name === current.name) {
                     current.endTime = chords[i].startTime;
                 } else {
-                    if ((current.endTime - current.startTime) >= minDuration) merged.push(current);
+                    if ((current.endTime - current.startTime) >= minDuration || current.name === 'N.C.') merged.push(current);
                     current = { ...chords[i], endTime: chords[i].startTime };
                 }
             }
-            if (current.endTime - current.startTime >= minDuration) merged.push(current);
+            if ((current.endTime - current.startTime) >= minDuration || current.name === 'N.C.') merged.push(current);
 
             return merged;
         }
 
-        function computeChromagram(frameData, sampleRate) {
+        function computeEnhancedChromagram(frameData, sampleRate) {
             const fftSize = frameData.length;
             const chroma = new Array(12).fill(0);
+            
             const hannWindow = new Float32Array(fftSize);
-            for (let i = 0; i < fftSize; i++) hannWindow[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
+            for (let i = 0; i < fftSize; i++) {
+                hannWindow[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
+            }
             
             const windowedData = new Float32Array(fftSize);
-            for (let i = 0; i < fftSize; i++) windowedData[i] = frameData[i] * hannWindow[i];
+            for (let i = 0; i < fftSize; i++) {
+                windowedData[i] = frameData[i] * hannWindow[i];
+            }
             
             const fft = performFFT(windowedData);
-            const magnitudes = new Array(fftSize / 2);
-            for (let i = 0; i < magnitudes.length; i++) magnitudes[i] = Math.sqrt(fft[i].real * fft[i].real + fft[i].imag * fft[i].imag);
+            const magnitudes = new Float32Array(fftSize / 2);
             
-            const minBin = Math.floor(50 * fftSize / sampleRate);
-            const maxBin = Math.floor(2000 * fftSize / sampleRate);
+            for (let i = 0; i < magnitudes.length; i++) {
+                magnitudes[i] = Math.sqrt(fft[i].real * fft[i].real + fft[i].imag * fft[i].imag);
+            }
             
-            for (let bin = minBin; bin < maxBin && bin < magnitudes.length; bin++) {
+            const minFreq = 60;
+            const maxFreq = 2000;
+            const minBin = Math.floor(minFreq * fftSize / sampleRate);
+            const maxBin = Math.floor(maxFreq * fftSize / sampleRate);
+            
+            const hps = applyHPS(magnitudes, fftSize, sampleRate);
+            
+            for (let bin = minBin; bin < maxBin && bin < hps.length; bin++) {
                 const freq = bin * sampleRate / fftSize;
                 const note = 12 * Math.log2(freq / 440) + 69;
                 const midiNote = Math.round(note);
                 const pitchClass = ((midiNote % 12) + 12) % 12;
-                chroma[pitchClass] += magnitudes[bin];
+                const magnitude = hps[bin];
+                chroma[pitchClass] += magnitude;
             }
             
             const maxVal = Math.max(...chroma);
-            if (maxVal > 0) for (let i = 0; i < 12; i++) chroma[i] /= maxVal;
+            if (maxVal > 0) {
+                for (let i = 0; i < 12; i++) {
+                    chroma[i] /= maxVal;
+                }
+            }
+            
             return chroma;
+        }
+
+        function applyHPS(magnitudes, fftSize, sampleRate) {
+            const hps = new Float32Array(magnitudes.length);
+            for (let i = 0; i < hps.length; i++) hps[i] = magnitudes[i];
+            
+            const numHarmonics = 5;
+            for (let h = 2; h <= numHarmonics; h++) {
+                for (let i = 0; i < magnitudes.length; i++) {
+                    const harmonicBin = Math.floor(i * h);
+                    if (harmonicBin < magnitudes.length) {
+                        hps[i] *= magnitudes[harmonicBin];
+                    }
+                }
+            }
+            
+            let maxHPS = 0;
+            for (let i = 0; i < hps.length; i++) {
+                if (hps[i] > maxHPS) maxHPS = hps[i];
+            }
+            
+            if (maxHPS > 0) {
+                for (let i = 0; i < hps.length; i++) {
+                    hps[i] = hps[i] / maxHPS;
+                }
+            }
+            
+            return hps;
         }
 
         function performFFT(signal) {
@@ -479,18 +555,62 @@
             return fft;
         }
 
-        function reverseBits(x, bits) { let result = 0; for (let i = 0; i < bits; i++) { result = (result << 1) | (x & 1); x >>= 1; } return result; }
+        function reverseBits(x, bits) { 
+            let result = 0; 
+            for (let i = 0; i < bits; i++) { 
+                result = (result << 1) | (x & 1); 
+                x >>= 1; 
+            } 
+            return result; 
+        }
 
-        function matchChordTemplate(chromagram) {
-            let bestChord = 'N.C.';
-            let bestScore = 0;
-            for (const [chordName, template] of Object.entries(CHORD_TEMPLATES)) {
-                let score = 0;
-                for (let i = 0; i < 12; i++) if (template[i] === 1) score += chromagram[i];
-                score = score / template.reduce((a, b) => a + b, 0);
-                if (score > bestScore) { bestScore = score; bestChord = chordName; }
+        function matchChordTemplate(chromagram, key) {
+            let keyRoot = key.replace('m', '');
+            let isMinor = key.includes('m');
+            
+            const keyRootIdx = NOTE_NAMES.indexOf(keyRoot);
+            if (keyRootIdx === -1) {
+                const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+                keyRoot = flatMap[keyRoot] || keyRoot;
             }
-            return { chord: bestChord };
+            
+            let bestChord = 'N.C.';
+            let bestScore = -Infinity;
+
+            for (const [chordName, template] of Object.entries(ALL_CHORDS)) {
+                let chordRoot = chordName.replace(/[0-9]/g, '');
+                const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+                chordRoot = flatMap[chordRoot] || chordRoot;
+                
+                let chordRootIdx = NOTE_NAMES.indexOf(chordRoot);
+                if (chordRootIdx === -1) continue;
+                
+                let keyIdx = NOTE_NAMES.indexOf(keyRoot);
+                if (keyIdx === -1) keyIdx = 0;
+                
+                const semitoneDist = Math.abs(chordRootIdx - keyIdx);
+                const distanceWeight = semitoneDist <= 3 ? 1.5 : (semitoneDist <= 6 ? 1.0 : 0.5);
+                
+                let score = 0;
+                for (let i = 0; i < 12; i++) {
+                    if (template[i] === 1) score += chromagram[i];
+                }
+                const chordTones = template.reduce((a, b) => a + b, 0);
+                score = score / chordTones;
+                
+                const chordQuality = chordName.includes('7') ? 'seventh' : (chordName.includes('m') ? 'minor' : 'major');
+                if (isMinor && chordQuality === 'minor') score *= 1.3;
+                if (!isMinor && chordQuality === 'major') score *= 1.3;
+                
+                score *= distanceWeight;
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestChord = chordName;
+                }
+            }
+
+            return { chord: bestScore > 0.15 ? bestChord : 'N.C.' };
         }
 
         function displayResults(chords, key, duration) {
@@ -499,10 +619,10 @@
 
             document.getElementById('keyDisplay').textContent = `Tonalità: ${key}`;
             document.getElementById('totalChords').textContent = chords.length;
-            document.getElementById('uniqueChords').textContent = new Set(chords.map(c => c.name)).size;
+            document.getElementById('uniqueChords').textContent = new Set(chords.filter(c => c.name !== 'N.C.').map(c => c.name)).size;
             document.getElementById('duration').textContent = formatTime(duration);
 
-            const uniqueChords = [...new Set(chords.map(c => c.name))];
+            const uniqueChords = [...new Set(chords.filter(c => c.name !== 'N.C.').map(c => c.name))];
             const chordList = document.getElementById('chordList');
             chordList.innerHTML = uniqueChords.map(c => `<span class="chord-tag">${c}</span>`).join('');
 
@@ -512,16 +632,21 @@
         }
 
         function findMainProgression(chords) {
+            const filteredChords = chords.filter(c => c.name !== 'N.C.');
+            if (filteredChords.length === 0) return [];
+            
             const chordCounts = {};
-            chords.forEach(c => { chordCounts[c.name] = (chordCounts[c.name] || 0) + 1; });
+            filteredChords.forEach(c => { chordCounts[c.name] = (chordCounts[c.name] || 0) + 1; });
             
             const sorted = Object.entries(chordCounts).sort((a, b) => b[1] - a[1]);
             const topChords = sorted.slice(0, 6).map(([chord]) => chord);
             
             const progression = [];
-            chords.forEach(c => {
-                if (topChords.includes(c.name) && !progression.includes(c.name)) {
+            const seen = new Set();
+            filteredChords.forEach(c => {
+                if (topChords.includes(c.name) && !seen.has(c.name)) {
                     progression.push(c.name);
+                    seen.add(c.name);
                 }
             });
             
