@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordScope - Analizzatore di Accordi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #14141f;
+            --primary: #00ffc8;
+            --secondary: #ff6b9d;
+            --text: #e8e8f0;
+            --text-muted: #6b6b80;
+            --chord-c: #ff6b6b;
+            --chord-d: #ffa502;
+            --chord-e: #00ffc8;
+            --chord-f: #26de81;
+            --chord-g: #20bf6b;
+            --chord-a: #4b7bec;
+            --chord-b: #a55eea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            background: var(--surface);
+            border-bottom: 1px solid rgba(0, 255, 200, 0.1);
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(0, 255, 200, 0.4);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            gap: 24px;
+        }
+
+        .upload-zone {
+            background: var(--surface);
+            border: 2px dashed rgba(0, 255, 200, 0.3);
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(0, 255, 200, 0.05);
+            box-shadow: 0 0 40px rgba(0, 255, 200, 0.1);
+        }
+
+        .upload-zone.hidden {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .upload-text strong {
+            color: var(--primary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .player-section {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            display: none;
+        }
+
+        .player-section.active {
+            display: block;
+        }
+
+        .waveform-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #waveform {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .play-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 255, 200, 0.3);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(0, 255, 200, 0.5);
+        }
+
+        .play-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--bg);
+        }
+
+        .progress-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .current-chord-display {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            display: none;
+        }
+
+        .current-chord-display.active {
+            display: block;
+        }
+
+        .current-chord-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 40px rgba(0, 255, 200, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .current-chord-notes {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .confidence-bar {
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .confidence-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .chord-timeline {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            display: none;
+        }
+
+        .chord-timeline.active {
+            display: block;
+        }
+
+        .timeline-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .timeline-container {
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .timeline-track {
+            display: flex;
+            min-width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .chord-segment {
+            min-width: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .chord-segment:hover {
+            filter: brightness(1.2);
+        }
+
+        .chord-segment.active {
+            box-shadow: inset 0 0 0 2px var(--primary);
+        }
+
+        .chord-segment-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .chord-segment-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            pointer-events: none;
+            transition: left 0.1s linear;
+            z-index: 10;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .algorithm-info {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 255, 200, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+        }
+
+        .error-message {
+            background: rgba(255, 107, 157, 0.1);
+            border: 1px solid var(--secondary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            color: var(--secondary);
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                padding: 16px;
+            }
+
+            .upload-zone {
+                padding: 32px 16px;
+            }
+
+            .current-chord-name {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Chord<span>Scope</span></div>
+    </header>
+
+    <main>
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">🎵</div>
+            <p class="upload-text">
+                <strong>Trascina il file audio qui</strong><br>
+                oppure clicca per selezionare<br>
+                <small>Formati supportati: MP3, WAV (max 50MB)</small>
+            </p>
+            <input type="file" class="file-input" id="fileInput" accept=".mp3,.wav,audio/mpeg,audio/wav">
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="player-section" id="playerSection">
+            <div class="waveform-container">
+                <canvas id="waveform"></canvas>
+                <div class="playhead" id="playhead"></div>
+            </div>
+            <div class="playback-controls">
+                <button class="play-btn" id="playBtn">
+                    <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span>
+                        <span id="totalTime">0:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="current-chord-display" id="currentChordDisplay">
+            <div class="current-chord-name" id="currentChordName">-</div>
+            <div class="current-chord-notes" id="currentChordNotes">-</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill"></div>
+            </div>
+            <div class="confidence-text" id="confidenceText">Attendibilità: 0%</div>
+        </div>
+
+        <div class="chord-timeline" id="chordTimeline">
+            <div class="timeline-header">Sequenza accordi rilevati</div>
+            <div class="timeline-wrapper">
+                <div class="timeline-container">
+                    <div class="timeline-track" id="timelineTrack"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span class="algorithm-info">Algoritmo: FFT + HPS + Chromagram + Template Matching</span>
+            <span>ChordScope v1.0</span>
+        </div>
+    </main>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Analisi in corso...</div>
+        </div>
+    </div>
+
+    <script>
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        const CHORD_TEMPLATES = {
+            'C': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'C#': [0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'D': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'D#': [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+            'E': [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+            'F': [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+            'F#': [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+            'G': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            'G#': [1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+            'A': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'A#': [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+            'B': [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1],
+            'Cm': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+            'C#m': [0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            'Dm': [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+            'D#m': [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0],
+            'Em': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+            'Fm': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'F#m': [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'Gm': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            'G#m': [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+            'Am': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'A#m': [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+            'Bm': [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            'C7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+            'D7': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'E7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            'F7': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'G7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            'A7': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'B7': [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+            'Cmaj7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            'Dmaj7': [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'Emaj7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+            'Fmaj7': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'Gmaj7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            'Amaj7': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'Cmin7': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+            'Dmin7': [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'Emin7': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            'Fmin7': [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'Gmin7': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+            'Amin7': [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'Cdim': [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
+            'Ddim': [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            'Edim': [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            'Fdim': [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+            'Gdim': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            'Adim': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            'Caug': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            'Daug': [0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+            'Eaug': [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'Faug': [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+            'Gaug': [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            'Aaug': [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+            'Csus2': [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            'Dsus2': [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            'Esus2': [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+            'Fsus2': [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+            'Gsus2': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+            'Asus2': [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            'Csus4': [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+            'Dsus4': [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+            'Esus4': [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+            'Fsus4': [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+            'Gsus4': [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            'Asus4': [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+        };
+
+        const CHORD_COLORS = {
+            'C': '#ff6b6b', 'C#': '#ff9f43', 'D': '#feca57', 'D#': '#54a0ff',
+            'E': '#00d2d3', 'F': '#5f27cd', 'F#': '#ff9ff3', 'G': '#01a3a4',
+            'G#': '#ffc048', 'A': '#ee5a24', 'A#': '#0abde3', 'B': '#48dbfb'
+        };
+
+        let audioContext;
+        let audioBuffer;
+        let sourceNode;
+        let isPlaying = false;
+        let startTime = 0;
+        let pausedAt = 0;
+        let chords = [];
+        let animationFrame;
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const playerSection = document.getElementById('playerSection');
+        const currentChordDisplay = document.getElementById('currentChordDisplay');
+        const chordTimeline = document.getElementById('chordTimeline');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const errorMessage = document.getElementById('errorMessage');
+        const playBtn = document.getElementById('playBtn');
+        const playIcon = document.getElementById('playIcon');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+        const currentChordName = document.getElementById('currentChordName');
+        const currentChordNotes = document.getElementById('currentChordNotes');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const confidenceText = document.getElementById('confidenceText');
+        const timelineTrack = document.getElementById('timelineTrack');
+        const playhead = document.getElementById('playhead');
+        const waveformCanvas = document.getElementById('waveform');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        playBtn.addEventListener('click', togglePlayback);
+        
+        progressBar.addEventListener('click', (e) => {
+            if (!audioBuffer) return;
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            seekTo(percent * audioBuffer.duration);
+        });
+
+        function showLoading(text) {
+            loadingText.textContent = text;
+            loadingOverlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            loadingOverlay.classList.remove('active');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => errorMessage.classList.remove('active'), 5000);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        async function handleFile(file) {
+            if (file.size > 50 * 1024 * 1024) {
+                showError('File troppo grande. Massimo 50MB.');
+                return;
+            }
+
+            const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3'];
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav)$/i)) {
+                showError('Formato non supportato. Usa MP3 o WAV.');
+                return;
+            }
+
+            showLoading('Caricamento audio...');
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                if (audioBuffer.duration < 1) {
+                    hideLoading();
+                    showError('File audio troppo breve.');
+                    return;
+                }
+
+                uploadZone.classList.add('hidden');
+                playerSection.classList.add('active');
+                currentChordDisplay.classList.add('active');
+                chordTimeline.classList.add('active');
+
+                drawWaveform();
+                totalTimeEl.textContent = formatTime(audioBuffer.duration);
+
+                showLoading('Analisi accordi in corso...');
+                chords = detectChords(audioBuffer);
+                renderTimeline();
+                hideLoading();
+
+            } catch (err) {
+                hideLoading();
+                showError('Errore nel caricamento del file: ' + err.message);
+            }
+        }
+
+        function drawWaveform() {
+            const canvas = waveformCanvas;
+            const ctx = canvas.getContext('2d');
+            const data = audioBuffer.getChannelData(0);
+            const step = Math.ceil(data.length / canvas.width);
+            const amp = canvas.height / 2;
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 120;
+
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, '#00ffc8');
+            gradient.addColorStop(1, '#ff6b9d');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(0, amp);
+
+            for (let i = 0; i < canvas.width; i++) {
+                let min = 1.0, max = -1.0;
+                for (let j = 0; j < step; j++) {
+                    const datum = data[(i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                ctx.lineTo(i, (1 + min) * amp);
+            }
+
+            for (let i = canvas.width - 1; i >= 0; i--) {
+                let min = 1.0, max = -1.0;
+                for (let j = 0; j < step; j++) {
+                    const datum = data[(i * step) + j];
+                    if (datum < min) min = datum;
+                    if (datum > max) max = datum;
+                }
+                ctx.lineTo(i, (1 + max) * amp);
+            }
+
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function detectChords(buffer) {
+            const sampleRate = buffer.sampleRate;
+            const duration = buffer.duration;
+            const channelData = buffer.getChannelData(0);
+            
+            const fftSize = 4096;
+            const hopSize = 2048;
+            const numFrames = Math.floor((channelData.length - fftSize) / hopSize);
+            
+            const detectedChords = [];
+            
+            for (let frame = 0; frame < numFrames; frame++) {
+                const startSample = frame * hopSize;
+                const frameData = channelData.slice(startSample, startSample + fftSize);
+                
+                const chromagram = computeChromagram(frameData, sampleRate);
+                const { chord, confidence } = matchChordTemplate(chromagram);
+                
+                const time = startSample / sampleRate;
+                
+                if (detectedChords.length > 0) {
+                    const lastChord = detectedChords[detectedChords.length - 1];
+                    if (lastChord.name === chord) {
+                        lastChord.endTime = time + (hopSize / sampleRate);
+                        lastChord.confidence = Math.max(lastChord.confidence, confidence);
+                        continue;
+                    }
+                }
+                
+                detectedChords.push({
+                    name: chord,
+                    startTime: time,
+                    endTime: time + (hopSize / sampleRate),
+                    confidence: confidence
+                });
+            }
+            
+            return smoothChords(detectedChords);
+        }
+
+        function computeChromagram(frameData, sampleRate) {
+            const fftSize = frameData.length;
+            const chroma = new Array(12).fill(0);
+            
+            const hannWindow = new Float32Array(fftSize);
+            for (let i = 0; i < fftSize; i++) {
+                hannWindow[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (fftSize - 1)));
+            }
+            
+            const windowedData = new Float32Array(fftSize);
+            for (let i = 0; i < fftSize; i++) {
+                windowedData[i] = frameData[i] * hannWindow[i];
+            }
+            
+            const fft = performFFT(windowedData);
+            const magnitudes = new Array(fftSize / 2);
+            
+            for (let i = 0; i < magnitudes.length; i++) {
+                magnitudes[i] = Math.sqrt(fft[i].real * fft[i].real + fft[i].imag * fft[i].imag);
+            }
+            
+            const minBin = Math.floor(50 * fftSize / sampleRate);
+            const maxBin = Math.floor(2000 * fftSize / sampleRate);
+            
+            for (let bin = minBin; bin < maxBin && bin < magnitudes.length; bin++) {
+                const freq = bin * sampleRate / fftSize;
+                const note = 12 * Math.log2(freq / 440) + 69;
+                const midiNote = Math.round(note);
+                const pitchClass = ((midiNote % 12) + 12) % 12;
+                const magnitude = magnitudes[bin];
+                chroma[pitchClass] += magnitude;
+            }
+            
+            const maxVal = Math.max(...chroma);
+            if (maxVal > 0) {
+                for (let i = 0; i < 12; i++) {
+                    chroma[i] /= maxVal;
+                }
+            }
+            
+            return chroma;
+        }
+
+        function performFFT(signal) {
+            const n = signal.length;
+            const fft = new Array(n);
+            
+            for (let i = 0; i < n; i++) {
+                fft[i] = { real: signal[i], imag: 0 };
+            }
+            
+            const bits = Math.log2(n);
+            for (let i = 0; i < n; i++) {
+                const j = reverseBits(i, bits);
+                if (j > i) {
+                    [fft[i], fft[j]] = [fft[j], fft[i]];
+                }
+            }
+            
+            for (let size = 2; size <= n; size *= 2) {
+                const halfSize = size / 2;
+                const angle = -2 * Math.PI / size;
+                const wReal = Math.cos(angle);
+                const wImag = Math.sin(angle);
+                
+                for (let i = 0; i < n; i += size) {
+                    let uReal = 1, uImag = 0;
+                    for (let j = 0; j < halfSize; j++) {
+                        const idx1 = i + j;
+                        const idx2 = i + j + halfSize;
+                        const tReal = uReal * fft[idx2].real - uImag * fft[idx2].imag;
+                        const tImag = uReal * fft[idx2].imag + uImag * fft[idx2].real;
+                        
+                        fft[idx2].real = fft[idx1].real - tReal;
+                        fft[idx2].imag = fft[idx1].imag - tImag;
+                        fft[idx1].real += tReal;
+                        fft[idx1].imag += tImag;
+                        
+                        const newReal = uReal * wReal - uImag * wImag;
+                        const newImag = uReal * wImag + uImag * wReal;
+                        uReal = newReal;
+                        uImag = newImag;
+                    }
+                }
+            }
+            
+            return fft;
+        }
+
+        function reverseBits(x, bits) {
+            let result = 0;
+            for (let i = 0; i < bits; i++) {
+                result = (result << 1) | (x & 1);
+                x >>= 1;
+            }
+            return result;
+        }
+
+        function matchChordTemplate(chromagram) {
+            let bestChord = 'N.C.';
+            let bestScore = 0;
+            
+            for (const [chordName, template] of Object.entries(CHORD_TEMPLATES)) {
+                let score = 0;
+                for (let i = 0; i < 12; i++) {
+                    if (template[i] === 1) {
+                        score += chromagram[i];
+                    }
+                }
+                
+                const chordToneCount = template.reduce((a, b) => a + b, 0);
+                score = score / chordToneCount;
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestChord = chordName;
+                }
+            }
+            
+            const confidence = Math.min(100, Math.round(bestScore * 100));
+            
+            return { chord: bestChord, confidence };
+        }
+
+        function smoothChords(rawChords) {
+            if (rawChords.length === 0) return [];
+            
+            const smoothed = [rawChords[0]];
+            const minDuration = 0.3;
+            
+            for (let i = 1; i < rawChords.length; i++) {
+                const current = rawChords[i];
+                const previous = smoothed[smoothed.length - 1];
+                
+                if (current.name === previous.name) {
+                    previous.endTime = current.endTime;
+                    previous.confidence = Math.max(previous.confidence, current.confidence);
+                } else if (current.endTime - current.startTime >= minDuration) {
+                    smoothed.push(current);
+                }
+            }
+            
+            return smoothed;
+        }
+
+        function renderTimeline() {
+            timelineTrack.innerHTML = '';
+            const totalDuration = audioBuffer.duration;
+            
+            chords.forEach((chord, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'chord-segment';
+                segment.dataset.index = index;
+                
+                const width = ((chord.endTime - chord.startTime) / totalDuration) * 100;
+                segment.style.width = `${Math.max(width, 1)}%`;
+                
+                const rootNote = chord.name.replace(/[0-9#m dimsus]/g, '');
+                const baseColor = CHORD_COLORS[rootNote] || '#666';
+                segment.style.background = baseColor;
+                segment.style.opacity = 0.7 + (chord.confidence / 300);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'chord-segment-name';
+                nameSpan.textContent = chord.name;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'chord-segment-time';
+                timeSpan.textContent = formatTime(chord.startTime);
+                
+                segment.appendChild(nameSpan);
+                segment.appendChild(timeSpan);
+                
+                segment.addEventListener('click', () => {
+                    seekTo(chord.startTime);
+                });
+                
+                timelineTrack.appendChild(segment);
+            });
+        }
+
+        function updatePlayhead() {
+            if (!isPlaying || !audioBuffer) return;
+            
+            const currentTime = audioContext.currentTime - startTime + pausedAt;
+            const progress = (currentTime / audioBuffer.duration) * 100;
+            
+            progressFill.style.width = `${Math.min(progress, 100)}%`;
+            currentTimeEl.textContent = formatTime(currentTime);
+            
+            const timelineRect = document.querySelector('.timeline-container').getBoundingClientRect();
+            playhead.style.left = `${Math.min((currentTime / audioBuffer.duration) * timelineRect.width, timelineRect.width)}px`;
+            
+            updateCurrentChord(currentTime);
+            
+            if (currentTime >= audioBuffer.duration) {
+                stopPlayback();
+                return;
+            }
+            
+            animationFrame = requestAnimationFrame(updatePlayhead);
+        }
+
+        function updateCurrentChord(time) {
+            const currentChord = chords.find(c => time >= c.startTime && time < c.endTime) || { name: 'N.C.', confidence: 0 };
+            
+            currentChordName.textContent = currentChord.name;
+            
+            if (currentChord.name !== 'N.C.') {
+                const root = currentChord.name.replace(/[0-9#m dimsus]/g, '');
+                const template = CHORD_TEMPLATES[currentChord.name];
+                if (template) {
+                    const notes = [];
+                    template.forEach((active, i) => {
+                        if (active) notes.push(NOTE_NAMES[i]);
+                    });
+                    currentChordNotes.textContent = notes.join(' - ');
+                }
+            } else {
+                currentChordNotes.textContent = '-';
+            }
+            
+            confidenceFill.style.width = `${currentChord.confidence}%`;
+            confidenceText.textContent = `Attendibilità: ${currentChord.confidence}%`;
+            
+            const segments = timelineTrack.querySelectorAll('.chord-segment');
+            segments.forEach((seg, i) => {
+                seg.classList.toggle('active', chords[i] && time >= chords[i].startTime && time < chords[i].endTime);
+            });
+        }
+
+        function togglePlayback() {
+            if (isPlaying) {
+                pausePlayback();
+            } else {
+                startPlayback();
+            }
+        }
+
+        function startPlayback() {
+            if (!audioBuffer) return;
+            
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.connect(audioContext.destination);
+            
+            startTime = audioContext.currentTime;
+            sourceNode.start(0, pausedAt);
+            
+            isPlaying = true;
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'block';
+            
+            sourceNode.onended = () => {
+                if (isPlaying) {
+                    stopPlayback();
+                }
+            };
+            
+            updatePlayhead();
+        }
+
+        function pausePlayback() {
+            if (!sourceNode) return;
+            
+            pausedAt += audioContext.currentTime - startTime;
+            sourceNode.stop();
+            isPlaying = false;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            
+            cancelAnimationFrame(animationFrame);
+        }
+
+        function stopPlayback() {
+            if (sourceNode) {
+                try { sourceNode.stop(); } catch(e) {}
+            }
+            isPlaying = false;
+            pausedAt = 0;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            progressFill.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
+            playhead.style.left = '0px';
+            
+            cancelAnimationFrame(animationFrame);
+            
+            updateCurrentChord(0);
+        }
+
+        function seekTo(time) {
+            const wasPlaying = isPlaying;
+            
+            if (isPlaying) {
+                pausePlayback();
+            }
+            
+            pausedAt = Math.max(0, Math.min(time, audioBuffer.duration));
+            progressFill.style.width = `${(pausedAt / audioBuffer.duration) * 100}%`;
+            currentTimeEl.textContent = formatTime(pausedAt);
+            
+            const timelineRect = document.querySelector('.timeline-container').getBoundingClientRect();
+            playhead.style.left = `${(pausedAt / audioBuffer.duration) * timelineRect.width}px`;
+            
+            updateCurrentChord(pausedAt);
+            
+            if (wasPlaying) {
+                startPlayback();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 MiniMax AI</h1>
+      <span class="model-tag">M2</span>
+    </header>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="chat">Chat</button>
+      <button class="tab" data-tab="page">Page</button>
+      <button class="tab" data-tab="code">Code</button>
+    </div>
+    
+    <div id="chat-panel" class="panel active">
+      <div id="messages" class="messages"></div>
+      <div class="input-area">
+        <textarea id="user-input" placeholder="Ask anything..."></textarea>
+        <button id="send-btn">Send</button>
+      </div>
+    </div>
+    
+    <div id="page-panel" class="panel">
+      <div class="info-section">
+        <h3>Current Page</h3>
+        <p id="page-url">Loading...</p>
+      </div>
+      <div class="actions">
+        <button id="get-page-btn" class="action-btn">Get Content</button>
+        <button id="analyze-btn" class="action-btn">Analyze</button>
+      </div>
+      <div id="page-result" class="result-area"></div>
+    </div>
+    
+    <div id="code-panel" class="panel">
+      <div class="code-input">
+        <textarea id="code-input" placeholder="Paste code here..."></textarea>
+      </div>
+      <div class="code-actions">
+        <button id="explain-btn" class="action-btn">Explain</button>
+        <button id="fix-btn" class="action-btn">Fix</button>
+        <button id="refactor-btn" class="action-btn">Refactor</button>
+      </div>
+      <div id="code-result" class="result-area"></div>
+    </div>
+    
+    <footer>
+      <div class="status" id="status">
+        <span class="status-dot"></span>
+        <span>Initializing...</span>
+      </div>
+    </footer>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

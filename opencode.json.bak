@@ -1,0 +1,16 @@
+{
+    "provider": "google",
+    "model": "gemini-2.0-flash",
+    "api_key": "AIzaSyANk1-j9NEcpyNQWht-cbUp8gYnDGWtN7g",
+    "mcp": {
+        "filesystem": {
+            "type": "local",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "C:\\Users\\User\\.gemini\\antigravity\\scratch\\opencode-test"
+            ]
+        }
+    }
+}
